@@ -42,6 +42,36 @@ is $game.gist, $expected, "Grid is as expected";
 is $game.valid, True, "Grid is valid";
 is $game.complete, False, "Grid is not complete";   
 
-say $game.perl;
+my $code = "483921657"~
+           "967345821"~
+           "251876493"~
+           "548132976"~
+	   "729564138"~
+	   "136798245"~
+	   "372689514"~
+	   "814253769"~
+	   "695417382";
+
+$game = Game::Sudoku.new( code => $code );
+$expected = "483|921|657\n"~
+            "967|345|821\n"~
+            "251|876|493\n"~
+	    "---+---+---\n"~
+            "548|132|976\n"~
+	    "729|564|138\n"~
+	    "136|798|245\n"~
+	    "---+---+---\n"~
+	    "372|689|514\n"~
+	    "814|253|769\n"~
+	    "695|417|382";
+
+is $game.Str, $code, "String rep is as expected";
+is $game.gist, $expected, "Grid is as expected";
+
+is $game.valid, True, "Grid is valid";
+todo "Grid completion not coded yet";
+is $game.complete, True, "Grid is complete.";   
+
+
 
 done-testing;
