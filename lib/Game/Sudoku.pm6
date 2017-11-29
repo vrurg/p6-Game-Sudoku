@@ -77,11 +77,15 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
     method !sqr( Idx $sq ) {
         my $x = $sq % 3 * 3;
         my $y = $sq div 3 * 3;
+        return self!sqr-from-cell( $x, $y );
+    }
+
+    method !sqr-from-cell( Idx $x, Idx $y ) {
         my $tx = $x div 3 * 3;
         my $ty = $y div 3 * 3;
         return ( (0,1,2) X (0,1,2) ).map( -> ( $dx, $dy ) { my %t = ( x => $tx + $dx, y => $ty + $dy ); %t } );
     }
-        
+    
 }
 
 =begin pod
