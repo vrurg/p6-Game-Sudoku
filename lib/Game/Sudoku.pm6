@@ -4,6 +4,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where *.chars == 81;
     subset Idx of Int where 0 <= * <= 8;
+    subset CellValue of Int where 1 <= * <= 9;
     
     has @!grid; 
     has @!validations;
@@ -62,6 +63,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
             }
         );
     }
+    
     method complete {
         [&&] (1..9).map( so $!complete-all == *  );
     }
@@ -85,7 +87,20 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
         my $ty = $y div 3 * 3;
         return ( (0,1,2) X (0,1,2) ).map( -> ( $dx, $dy ) { my %t = ( x => $tx + $dx, y => $ty + $dy ); %t } );
     }
-    
+
+    method possible( Idx $x, Idx $y ) {
+	return () if @!grid[$y][$x] > 0;
+	( (1...9) (^) (
+	    |self!row($y).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ),
+	    |self!col($x).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ),
+	    |self!sqr-from-cell($x,$y).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ),
+	) ).keys;
+    }
+
+    method set( Idx $x, Idx $y, CellValue $val ) {
+	@!grid[$y][$x] = $val;
+	return True;
+    }
 }
 
 =begin pod
