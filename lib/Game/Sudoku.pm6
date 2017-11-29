@@ -3,8 +3,10 @@ use v6.c;
 class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where *.chars == 81;
+    subset Idx of Int where 0 <= * <= 8;
     
     has @!grid; 
+    has @!validations;
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb;
@@ -13,6 +15,15 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
                 @!grid[$y][$x] = @tmp[($y*9)+$x]; 
             }
         }
+        for ^9 -> $c {
+            @!validations.push( ( none( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                                  one( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+            @!validations.push( ( none( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                                  one( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+            @!validations.push( ( none( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                                  one( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+        }
+        
     }
     
     multi method Str {
@@ -33,8 +44,35 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
         return @lines.join( "\n" );
     }
 
-    multi method valid { True; }
-    multi method complete { False; }
+    method valid {
+        [&&] @!validations.map(
+            -> ( $none, $one ) {
+                [&&] (1..9).map(
+                    -> $val {
+                        ( ?( $none == $val ) ^^ ?( $one == $val ) );
+                    }
+                )
+            }
+        );
+    }
+    method complete { False; }
+
+    method !row( Idx $y ) {
+        return (^9).map( { my %t = ( x => $_, y => $y ); %t; } );
+    }
+
+    method !col( Idx $x ) {
+        return (^9).map( { my %t = ( x => $x, y => $_ ); %t } );
+    }
+
+    method !sqr( Idx $sq ) {
+        my $x = $sq % 3 * 3;
+        my $y = $sq div 3 * 3;
+        my $tx = $x div 3 * 3;
+        my $ty = $y div 3 * 3;
+        return ( (0,1,2) X (0,1,2) ).map( -> ( $dx, $dy ) { my %t = ( x => $tx + $dx, y => $ty + $dy ); %t } );
+    }
+        
 }
 
 =begin pod
