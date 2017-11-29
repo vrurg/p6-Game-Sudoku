@@ -69,7 +69,7 @@ is $game.Str, $code, "String rep is as expected";
 is $game.gist, $expected, "Grid is as expected";
 
 is $game.valid, True, "Grid is valid";
-todo "Grid completion not coded yet";
+#todo "Grid completion not coded yet";
 is $game.complete, True, "Grid is complete.";   
 
 

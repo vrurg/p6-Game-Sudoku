@@ -7,6 +7,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
     
     has @!grid; 
     has @!validations;
+    has $!complete-all;
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb;
@@ -15,6 +16,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
                 @!grid[$y][$x] = @tmp[($y*9)+$x]; 
             }
         }
+        my @all;
         for ^9 -> $c {
             @!validations.push( ( none( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
                                   one( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
@@ -22,8 +24,13 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
                                   one( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
             @!validations.push( ( none( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
                                   one( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+            @all.push(
+                one( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                one( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                one( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) )
+            );
         }
-        
+        $!complete-all = all( @all );
     }
     
     multi method Str {
@@ -55,7 +62,9 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
             }
         );
     }
-    method complete { False; }
+    method complete {
+        [&&] (1..9).map( so $!complete-all == *  );
+    }
 
     method !row( Idx $y ) {
         return (^9).map( { my %t = ( x => $_, y => $y ); %t; } );
