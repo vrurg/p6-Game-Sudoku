@@ -7,7 +7,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
     subset CellValue of Int where 1 <= * <= 9;
     
     has @!grid; 
-    has @!validations;
+    has $!valid-all;
     has $!complete-all;
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
@@ -18,13 +18,14 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
             }
         }
         my @all;
+        my @valid;
         for ^9 -> $c {
-            @!validations.push( ( none( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
-                                  one( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
-            @!validations.push( ( none( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
-                                  one( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
-            @!validations.push( ( none( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
-                                  one( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+            @valid.push( one( none( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                              one( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+            @valid.push( one( none( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                              one( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
+            @valid.push( one( none( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
+                              one( self!sqr( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ) ) );
             @all.push(
                 one( self!row( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
                 one( self!col( $c ).map( -> %t { @!grid[%t<y>][%t<x>] } ) ),
@@ -32,6 +33,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
             );
         }
         $!complete-all = all( @all );
+        $!valid-all = all( @valid );
     }
     
     multi method Str {
@@ -53,15 +55,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
     }
 
     method valid {
-        [&&] @!validations.map(
-            -> ( $none, $one ) {
-                [&&] (1..9).map(
-                    -> $val {
-                        ( ?( $none == $val ) ^^ ?( $one == $val ) );
-                    }
-                )
-            }
-        );
+        [&&] (1..9).map( so $!valid-all == * );
     }
     
     method complete {
