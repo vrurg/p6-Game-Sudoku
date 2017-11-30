@@ -93,7 +93,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
 
     method set( Idx $x, Idx $y, CellValue $val ) {
 	@!grid[$y][$x] = $val;
-	return True;
+	return self;
     }
 }
 
