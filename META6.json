@@ -4,7 +4,7 @@
   ],
   "build-depends" : [ ],
   "depends" : [ ],
-  "description" : "blah blah blah",
+  "description" : "Store, validate and solve sudoku puzzles",
   "license" : "Artistic-2.0",
   "name" : "Game::Sudoku",
   "perl" : "6.c",

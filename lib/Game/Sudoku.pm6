@@ -101,15 +101,18 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
 
 =head1 NAME
 
-Game::Sudoku - blah blah blah
+Game::Sudoku - Store, validate and solve sudoku puzzles
 
 =head1 SYNOPSIS
 
-  use Game::Sudoku;
+    use Game::Sudoku;
+
+    # Create an empty game
+    my $game = Game::Sudoku.new();
 
 =head1 DESCRIPTION
 
-Game::Sudoku is ...
+Game::Sudoku is a simple library to store, test and attempt to solve sudoku puzzles.
 
 =head1 AUTHOR
 

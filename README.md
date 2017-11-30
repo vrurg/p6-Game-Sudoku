@@ -3,17 +3,20 @@
 NAME
 ====
 
-Game::Sudoku - blah blah blah
+Game::Sudoku - Store, validate and solve sudoku puzzles
 
 SYNOPSIS
 ========
 
     use Game::Sudoku;
 
+    # Create an empty game
+    my $game = Game::Sudoku.new();
+
 DESCRIPTION
 ===========
 
-Game::Sudoku is ...
+Game::Sudoku is a simple library to store, test and attempt to solve sudoku puzzles.
 
 AUTHOR
 ======
