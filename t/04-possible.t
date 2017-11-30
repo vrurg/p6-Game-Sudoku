@@ -18,4 +18,10 @@ is $game.valid, True, "Game state is valid";
 
 is $game.set(1,0,2).Str,"22" ~ ( 0 x 79 ), "Still getting games";
 is $game.valid, False, "Game state is invalid as we have 2 2's";
+
+my $code = "003020600900305001001806400008102900700000008006708200002609500800203009005010300",
+$game =  Game::Sudoku.new( :code($code) );
+is $game.Str, $code, "Game as expected";
+is $game.possible(5,0),(1,4,7),"Got expected possibilites";
+
 done-testing;

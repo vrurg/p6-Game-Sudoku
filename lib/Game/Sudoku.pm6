@@ -11,7 +11,7 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
     has $!complete-all;
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
-        my @tmp = $code.comb;
+        my @tmp = $code.comb.map( *.Int );
         for ^9 -> $y {
             for ^9 -> $x {
                 @!grid[$y][$x] = @tmp[($y*9)+$x]; 
@@ -84,11 +84,14 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
 
     method possible( Idx $x, Idx $y ) {
 	return () if @!grid[$y][$x] > 0;
-	( (1...9) (^) (
-	    |self!row($y).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ),
-	    |self!col($x).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ),
-	    |self!sqr-from-cell($x,$y).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ),
-	) ).keys;
+
+        my $current = set(
+	    |(self!row($y).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ) ),
+	    |( self!col($x).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ) ),
+	    |( self!sqr-from-cell($x,$y).map( -> %t { @!grid[%t<y>][%t<x>] } ).grep( * > 0 ) ),
+	);
+        
+	( (1...9) (^) $current ).keys.sort;
     }
 
     method set( Idx $x, Idx $y, CellValue $val ) {
