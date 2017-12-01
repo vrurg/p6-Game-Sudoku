@@ -12,11 +12,8 @@ class Game::Sudoku:ver<0.0.1>:auth<simon.proctor@gmail.com> {
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb.map( *.Int );
-        for ^9 -> $y {
-            for ^9 -> $x {
-                @!grid[$y][$x] = @tmp[($y*9)+$x]; 
-            }
-        }
+        (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] = @tmp[($y*9)+$x] } );
+
         my @all;
         my @valid;
         for ^9 -> $c {

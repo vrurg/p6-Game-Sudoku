@@ -24,4 +24,10 @@ $game =  Game::Sudoku.new( :code($code) );
 is $game.Str, $code, "Game as expected";
 is $game.possible(5,0),(1,4,7),"Got expected possibilites";
 
+while [+] (^9 X ^9).map( -> ($x,$y) { ($x,$y) => $game.possible($x,$y) } ).grep( *.value.elems == 1 ).map( -> $p { my ( $x, $y ) = $p.key; $game.set($x,$y,$p.value[0]); 1; } ) {
+    ok $game.valid, "Game is valid"
+}
+ok $game.complete, "Game is complete"; 
+is $game.Str, "483921657967345821251876493548132976729564138136798245372689514814253769695417382", "Got expected solution";
+
 done-testing;
