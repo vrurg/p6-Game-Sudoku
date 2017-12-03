@@ -9,7 +9,8 @@
   "name" : "Game::Sudoku",
   "perl" : "6.c",
   "provides" : {
-    "Game::Sudoku" : "lib/Game/Sudoku.pm6"
+    "Game::Sudoku" : "lib/Game/Sudoku.pm6",
+    "Game::Sudoku::Solver" : "lib/Game/Sudoku/Solver.pm6"
   },
   "resources" : [ ],
   "source-url" : "https://github.com/Scimon/perl6.git",
