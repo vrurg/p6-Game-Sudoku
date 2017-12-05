@@ -44,3 +44,33 @@ sub solve-puzzle( Game::Sudoku $game ) is export {
     return $result;
 }
 
+=begin pod
+
+=head1 NAME
+
+Game::Sudoku::Solver - Attempt to solve Sudoku puzzles
+
+=head1 DESCRIPTION
+
+Game::Sudoku::Solver provides a function that takes a Game::Sudoku puzzle and retuns the puzzle solved to the extent
+of it's abilities.
+
+=head1 FUNCTIONS
+
+The following function is expoted by default when is module is used.
+
+=head2 solve-puzzle( Game::Sudoku -> Game::Sudoku )
+
+Takes a Game::Sudoku object and attempts to solve it by a series of simple tests looking for unique values. 
+
+=head1 AUTHOR
+
+Simon Proctor <simon.proctor@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2017 Simon Proctor
+
+This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
+
+=end pod
