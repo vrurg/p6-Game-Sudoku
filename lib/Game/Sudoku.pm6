@@ -1,6 +1,6 @@
 use v6.c;
 
-class Game::Sudoku:ver<0.1.0>:auth<simon.proctor@gmail.com> {
+class Game::Sudoku:ver<0.1.1>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where * ~~ /^ <[0..9]> ** 81 $/;
     subset Idx of Int where 0 <= * <= 8;
@@ -9,7 +9,8 @@ class Game::Sudoku:ver<0.1.0>:auth<simon.proctor@gmail.com> {
     has @!grid; 
     has $!valid-all;
     has $!complete-all;
-
+    has $!none-all;
+    
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb.map( *.Int );
         (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] = @tmp[($y*9)+$x] } );
@@ -31,6 +32,7 @@ class Game::Sudoku:ver<0.1.0>:auth<simon.proctor@gmail.com> {
         }
         $!complete-all = all( @all );
         $!valid-all = all( @valid );
+        $!none-all = none( (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] } ) );
     }
 
     multi method Str {
@@ -60,7 +62,7 @@ class Game::Sudoku:ver<0.1.0>:auth<simon.proctor@gmail.com> {
     }
 
     method full {
-        [&&] @!grid.map( { [&&] $_.map( { $_ != 0 } ) } )
+        so $!none-all == 0;
     }
 
     method row( Idx $y ) {
