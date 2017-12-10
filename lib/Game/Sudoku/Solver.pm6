@@ -97,7 +97,7 @@ of it's abilities.
 
 =head1 FUNCTIONS
 
-The following function is expoted by default when is module is used.
+The following function is exported by default when is module is used.
 
 =head2 solve-puzzle( Game::Sudoku -> Game::Sudoku )
 
