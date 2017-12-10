@@ -11,7 +11,7 @@ Game::Sudoku::Solver provides a function that takes a Game::Sudoku puzzle and re
 FUNCTIONS
 =========
 
-The following function is expoted by default when is module is used.
+The following function is exported by default when is module is used.
 
 solve-puzzle( Game::Sudoku -> Game::Sudoku )
 --------------------------------------------
