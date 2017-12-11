@@ -8,9 +8,10 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
 
     has Array @!grid;
     has Set $!initial;
-    has Junction $!valid-all;
-    has Junction $!complete-all;
-    has Junction $!none-all;
+    has $!valid-all;
+    has $!complete-all;
+    has $!none-all;
+    has %!poss-cache = ();
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb.map( *.Int );
@@ -22,8 +23,28 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
             }
         );
         $!initial = set( @initial-list );
+    }
 
-        $!valid-all = all(
+    method !compute-none {
+        none( (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] } ) );
+    }
+
+    method !compute-complete {
+        all(
+            (^9).map(
+                {
+                    |(
+                        one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
+                        one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
+                        one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) )
+                    )
+                }
+            )
+        );
+    }
+
+    method !compute-valid {
+        all(
             (^9).map(
                 {
                     |(
@@ -37,18 +58,10 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
                 }
             )
         );
-        $!complete-all = all(
-            (^9).map(
-                {
-                    |(
-                        one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                        one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                        one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) )
-                    )
-                }
-            )
-        );
-        $!none-all = none( (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] } ) );
+    }
+
+    multi method perl {
+        return @!grid.perl;
     }
 
     multi method Str {
@@ -70,14 +83,17 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
     }
 
     method valid {
+        $!valid-all //= self!compute-valid();
         [&&] (1..9).map( so $!valid-all == * );
     }
 
     method complete {
+        $!complete-all //= self!compute-complete();
         [&&] (1..9).map( so $!complete-all == *  );
     }
 
     method full {
+        $!none-all //= self!compute-none();
         so $!none-all == 0;
     }
 
@@ -101,14 +117,18 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
         return ( (0,1,2) X (0,1,2) ).map( -> ( $dx, $dy ) { ( $tx + $dx, $ty + $dy ) } );
     }
 
-    method possible( Idx $x, Idx $y ) {
-        return () if @!grid[$y][$x] > 0;
+    method possible( Idx $x, Idx $y, Bool :$set = False ) {
+        return $set ?? set() !! () if @!grid[$y][$x] > 0;
+        if %!poss-cache{"$x,$y"}:exists {
+            return $set ?? %!poss-cache{"$x,$y"} !! %!poss-cache{"$x,$y"}.keys.sort;
+        }
 
-        ( (1..9) (-) set(
-              ( self.row($y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
-              ( self.col($x).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
-              ( self.square($x,$y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) )
-          ) ).keys.sort;
+        %!poss-cache{"$x,$y"} = ( (1..9) (-) set(
+                                      ( self.row($y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
+                                      ( self.col($x).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
+                                      ( self.square($x,$y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) )
+                                  ) );
+        return $set ?? %!poss-cache{"$x,$y"} !! %!poss-cache{"$x,$y"}.keys.sort;
     }
 
     multi method cell( Idx $x, Idx $y ) {
@@ -118,6 +138,7 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
     multi method cell( Idx $x, Idx $y, CellValue $val ) {
         return self if $!initial{"$x,$y"};
         @!grid[$y][$x] = $val;
+        %!poss-cache = ();
         return self;
     }
 
@@ -173,11 +194,13 @@ Returns True if the sudoku game has all it's cells set to a non zero value. Note
 
 Returns True is the sudoku game is both valid and full.
 
-=head2 possible( Int, Int -> List )
+=head2 possible( Int, Int, Bool :$seq -> List )
 
-Returns the List of numbers that can be put in the current cell. Note this performs a simple check of the row, column and square the cell is in it does not perform more complex logical checks.
+Returns the sorted Sequence of numbers that can be put in the current cell. Note this performs a simple check of the row, column and square the cell is in it does not perform more complex logical checks.
 
 Returns an empty List if the cell already has a value set or if there are no possible values.
+
+If the optional :set parameter is passed then returns a Set of the values instead.
 
 =head2 cell( Int, Int -> Int )
 =head2 cell( Int, Int, Int -> Game::Sudoku )

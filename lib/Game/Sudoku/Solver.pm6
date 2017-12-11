@@ -7,16 +7,16 @@ sub solve-puzzle( Game::Sudoku $game ) is export {
     my $initial;
     my $result = Game::Sudoku.new( :code($game.Str) );
     repeat {
-        $initial = $result.Str;
+        $initial = $result.perl;
         $result = simple-solutions( $result );
-    } while ( ! $result.complete && $result.Str ne $initial );
+    } while ( ! $result.complete && $result.perl ne $initial );
 
     return $result if $result.complete;
 
     my $options = ( (^9 X ^9)
-    .map( -> ($x,$y) { ($x,$y) => $result.possible($x,$y).Array } )
-    .grep( *.value.elems > 0 )
-    .sort( *.value.elems <=> *.value.elems ) )[0];
+                    .map( -> ($x,$y) { ($x,$y) => $result.possible($x,$y).Array } )
+                    .grep( *.value.elems > 0 )
+                    .sort( *.value.elems <=> *.value.elems ) )[0];
 
     return $result unless $options;
     
@@ -48,14 +48,14 @@ sub find-uniques( Game::Sudoku $game ) {
 
     my @changes;
 
-    for ^9 -> $idx {
-        for <row col square> -> $method-name {
-            my $method = $result.^find_method($method-name);
-            my $only = [(^)] $result.$method($idx).map( -> ( $x,$y ) { $result.possible($x,$y) } );
+    for <row col square> -> $method-name {
+        my $method = $result.^find_method($method-name);
+        for ^9 -> $idx {
+            my $only = [(^)] $result.$method($idx).map( -> ( $x,$y ) { $result.possible($x,$y,:set) } );
 
             for $only.keys -> $val {
                 for $result.$method($idx) -> ($x,$y) {
-                    if $val (elem) $result.possible($x,$y) {
+                    if $val (elem) $result.possible($x,$y,:set) {
                         @changes.push( ($x,$y) => $val );
                     }
                 }
@@ -73,13 +73,17 @@ sub find-uniques( Game::Sudoku $game ) {
 
 sub find-single-options( Game::Sudoku $game ) {
     my $result = Game::Sudoku.new( :code($game.Str) );
-    my $count;
+    my @changes;
     repeat {
-        $count = [+] (^9 X ^9)
+        @changes = (^9 X ^9)
         .map( -> ($x,$y) { ($x,$y) => $result.possible($x,$y) } )
-        .grep( *.value.elems == 1 )
-        .map( -> $p { my ( $x, $y ) = $p.key; $result.cell($x,$y,$p.value[0]); 1; } );
-    } while ( $count > 0 && ! $result.complete );
+        .grep( *.value.elems == 1 );
+
+        for @changes -> $p {
+            my ( $x, $y ) = $p.key;
+            $result.cell($x,$y,$p.value[0]);
+        }
+    } while ( @changes.elems > 0 && ! $result.complete );
     
     return $result
 }
