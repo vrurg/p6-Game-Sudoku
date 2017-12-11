@@ -194,7 +194,7 @@ Returns True if the sudoku game has all it's cells set to a non zero value. Note
 
 Returns True is the sudoku game is both valid and full.
 
-=head2 possible( Int, Int, Bool :$seq -> List )
+=head2 possible( Int, Int, Bool :$set -> List )
 
 Returns the sorted Sequence of numbers that can be put in the current cell. Note this performs a simple check of the row, column and square the cell is in it does not perform more complex logical checks.
 
