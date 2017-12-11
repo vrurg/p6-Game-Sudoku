@@ -3,12 +3,14 @@ unit module Game::Sudoku::Solver;
 use Game::Sudoku;
 
 sub solve-puzzle( Game::Sudoku $game ) is export {
+    return find-solution( Game::Sudoku.new( :code( $game.Str ) ) );
+}
 
+sub find-solution( Game::Sudoku $result ) {
     my $initial;
-    my $result = Game::Sudoku.new( :code($game.Str) );
     repeat {
         $initial = $result.perl;
-        $result = simple-solutions( $result );
+        simple-solutions( $result );
     } while ( ! $result.complete && $result.perl ne $initial );
 
     return $result if $result.complete;
@@ -19,7 +21,7 @@ sub solve-puzzle( Game::Sudoku $game ) is export {
                     .sort( *.value.elems <=> *.value.elems ) )[0];
 
     return $result unless $options;
-    
+
     my $cell = $options.key;
     my @possible = $options.value;
 
@@ -28,24 +30,22 @@ sub solve-puzzle( Game::Sudoku $game ) is export {
         my ($x,$y) = $cell;
         my $original = $result.Str;
         $result.cell( $x, $y, $value );
-        $result = solve-puzzle( $result );
-        $result = Game::Sudoku.new( :code($original) ) unless $result.complete;
+        find-solution( $result );
+        $result.reset( :code($original) ) unless $result.complete;
     }
-    
+
     return $result;
 }
 
-sub simple-solutions( Game::Sudoku $game ) {
-    my $result = find-single-options( $game );
-    
+sub simple-solutions( Game::Sudoku $result ) {
+    find-single-options( $result );
+
     return $result if $result.complete;
 
     return find-uniques( $result );
 }
 
-sub find-uniques( Game::Sudoku $game ) {
-    my $result = Game::Sudoku.new( :code($game.Str) );
-
+sub find-uniques( Game::Sudoku $result ) {
     my @changes;
 
     for <row col square> -> $method-name {
@@ -71,8 +71,7 @@ sub find-uniques( Game::Sudoku $game ) {
     return $result;
 }
 
-sub find-single-options( Game::Sudoku $game ) {
-    my $result = Game::Sudoku.new( :code($game.Str) );
+sub find-single-options( Game::Sudoku $result ) {
     my @changes;
     repeat {
         @changes = (^9 X ^9)
@@ -84,7 +83,7 @@ sub find-single-options( Game::Sudoku $game ) {
             $result.cell($x,$y,$p.value[0]);
         }
     } while ( @changes.elems > 0 && ! $result.complete );
-    
+
     return $result
 }
 

@@ -1,6 +1,6 @@
 use v6.c;
 
-class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
+class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where * ~~ /^ <[0..9]> ** 81 $/;
     subset Idx of Int where 0 <= * <= 8;
@@ -23,6 +23,24 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
             }
         );
         $!initial = set( @initial-list );
+    }
+
+    method reset( GridCode :$code ) {
+        my @tmp = $code.comb.map( *.Int );
+        my @initial-list = ();
+        (^9 X ^9).map(
+            -> ($x,$y) {
+                @!grid[$y][$x] = @tmp[($y*9)+$x];
+                @initial-list.push( "$x,$y" ) if @tmp[($y*9)+$x] > 0;
+            }
+        );
+        $!valid-all = Nil;
+        $!complete-all = Nil;
+        $!none-all = Nil;
+        %!poss-cache = ();
+        if ( ! @initial-list (<=) $!initial ) {
+            $!initial = set( @initial-list );
+        }
     }
 
     method !compute-none {
@@ -227,6 +245,10 @@ Returns the list of (x,y) co-ordinates in the given square of the grid. A square
     3|4|5
     -----
     6|7|8
+
+=head2 reset( Str :$code )
+
+Resets the puzzle to the state given in the $code argument. If the previous states initial values are all contained in the new puzzle then they will not be updated. Otherwise the puzzle will be treated as a fresh one with the given state.
 
 =head1 AUTHOR
 
