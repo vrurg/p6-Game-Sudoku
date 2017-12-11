@@ -1,23 +1,23 @@
 use v6.c;
 
-class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
+class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where * ~~ /^ <[0..9]> ** 81 $/;
     subset Idx of Int where 0 <= * <= 8;
     subset CellValue of Int where 0 <= * <= 9;
 
-    has @!grid;
-    has $!initial;
-    has $!valid-all;
-    has $!complete-all;
-    has $!none-all;
+    has Int @!grid[9;9];
+    has Set $!initial;
+    has Junction $!valid-all;
+    has Junction $!complete-all;
+    has Junction $!none-all;
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb.map( *.Int );
         my @initial-list = ();
         (^9 X ^9).map(
             -> ($x,$y) {
-                @!grid[$y][$x] = @tmp[($y*9)+$x];
+                @!grid[$y;$x] = @tmp[($y*9)+$x];
                 @initial-list.push( "$x,$y" ) if @tmp[($y*9)+$x] > 0;
             }
         );
@@ -27,12 +27,12 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
             (^9).map(
                 {
                     |(
-                        one( none( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                             one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ) ),
-                        one( none( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                             one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ) ),
-                        one( none( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                             one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ) )
+                        one( none( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ),
+                             one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ) ),
+                        one( none( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ),
+                             one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ) ),
+                        one( none( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ),
+                             one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ) )
                     )
                 }
             )
@@ -41,18 +41,18 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
             (^9).map(
                 {
                     |(
-                        one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                        one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                        one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) )
+                        one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ),
+                        one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) ),
+                        one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y;$x] } ) )
                     )
                 }
             )
         );
-        $!none-all = none( (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] } ) );
+        $!none-all = none( (^9 X ^9).map( -> ($x,$y) { @!grid[$y;$x] } ) );
     }
 
     multi method Str {
-        return @!grid.map( -> @row { @row.join() } ).join();
+        return @!grid.join();
     }
 
     multi method gist {
@@ -60,7 +60,7 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
         for ^9 -> $y {
             my @row;
             for ^9 -> $x {
-                @row.push( @!grid[$y][$x] > 0 ?? @!grid[$y][$x] !! ' ' );
+                @row.push( @!grid[$y;$x] > 0 ?? @!grid[$y;$x] !! ' ' );
                 @row.push( "|" ) if $x == 2|5;
             }
             @lines.push( @row.join() );
@@ -102,22 +102,22 @@ class Game::Sudoku:ver<1.0.0>:auth<simon.proctor@gmail.com> {
     }
 
     method possible( Idx $x, Idx $y ) {
-        return () if @!grid[$y][$x] > 0;
+        return () if @!grid[$y;$x] > 0;
 
         ( (1..9) (-) set(
-              ( self.row($y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
-              ( self.col($x).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
-              ( self.square($x,$y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) )
+              ( self.row($y).map( -> ( $x, $y ) { @!grid[$y;$x] } ).grep( * > 0 ) ),
+              ( self.col($x).map( -> ( $x, $y ) { @!grid[$y;$x] } ).grep( * > 0 ) ),
+              ( self.square($x,$y).map( -> ( $x, $y ) { @!grid[$y;$x] } ).grep( * > 0 ) )
           ) ).keys.sort;
     }
 
     multi method cell( Idx $x, Idx $y ) {
-        @!grid[$y][$x] ?? @!grid[$y][$x] !! Nil;
+        @!grid[$y;$x] ?? @!grid[$y;$x] !! Nil;
     }
 
     multi method cell( Idx $x, Idx $y, CellValue $val ) {
         return self if $!initial{"$x,$y"};
-        @!grid[$y][$x] = $val;
+        @!grid[$y;$x] = $val;
         return self;
     }
 
