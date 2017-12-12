@@ -141,7 +141,9 @@ class Game::Sudoku:ver<1.1.1>:auth<simon.proctor@gmail.com> {
     multi method cell( Idx $x, Idx $y, CellValue $val ) {
         return self if $!initial{"$x,$y"};
         @!grid[$y][$x] = $val;
-        %!poss-cache = ();
+        self.row($y).map( -> ( $tx, $ty ) { %!poss-cache{"$tx,$ty"}:delete } );
+        self.col($x).map( -> ( $tx, $ty ) { %!poss-cache{"$tx,$ty"}:delete } );
+        self.square($x,$y).map( -> ( $tx, $ty ) { %!poss-cache{"$tx,$ty"}:delete } );
         %!test-cache = ();
         return self;
     }
