@@ -1,6 +1,6 @@
 use v6.c;
 
-class Game::Sudoku:ver<1.1.2>:auth<simon.proctor@gmail.com> {
+class Game::Sudoku:ver<1.2.0>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where * ~~ /^ <[0..9]> ** 81 $/;
     subset Idx of Int where 0 <= * <= 8;
