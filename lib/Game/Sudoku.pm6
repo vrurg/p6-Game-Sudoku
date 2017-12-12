@@ -1,6 +1,6 @@
 use v6.c;
 
-class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
+class Game::Sudoku:ver<1.1.1>:auth<simon.proctor@gmail.com> {
 
     subset GridCode of Str where * ~~ /^ <[0..9]> ** 81 $/;
     subset Idx of Int where 0 <= * <= 8;
@@ -8,10 +8,11 @@ class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
 
     has Array @!grid;
     has Set $!initial;
-    has $!valid-all;
-    has $!complete-all;
-    has $!none-all;
+    has Junction $!valid-all;
+    has Junction $!complete-all;
+    has Junction $!none-all;
     has %!poss-cache = ();
+    has %!test-cache = ();
     
     multi submethod BUILD( GridCode :$code = ("0" x 81) ) {
         my @tmp = $code.comb.map( *.Int );
@@ -34,10 +35,8 @@ class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
                 @initial-list.push( "$x,$y" ) if @tmp[($y*9)+$x] > 0;
             }
         );
-        $!valid-all = Nil;
-        $!complete-all = Nil;
-        $!none-all = Nil;
         %!poss-cache = ();
+        %!test-cache = ();
         if ( ! @initial-list (<=) $!initial ) {
             $!initial = set( @initial-list );
         }
@@ -101,18 +100,21 @@ class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
     }
 
     method valid {
-        $!valid-all //= self!compute-valid();
-        [&&] (1..9).map( so $!valid-all == * );
+        $!valid-all := self!compute-valid() unless $!valid-all;
+        return %!test-cache<valid> if %!test-cache<valid>:exists;
+        %!test-cache<valid> = [&&] (1..9).map( so $!valid-all == * );
     }
 
     method complete {
-        $!complete-all //= self!compute-complete();
-        [&&] (1..9).map( so $!complete-all == *  );
+        $!complete-all := self!compute-complete() unless $!complete-all;
+        return %!test-cache<complete> if %!test-cache<complete>:exists;
+        %!test-cache<complete> = [&&] (1..9).map( so $!complete-all == *  );
     }
 
     method full {
-        $!none-all //= self!compute-none();
-        so $!none-all == 0;
+        $!none-all := self!compute-none() unless $!none-all;
+        return %!test-cache<none> if %!test-cache<none>:exists;
+        %!test-cache<none> = so $!none-all == 0;
     }
 
     method row( Idx $y ) {
@@ -157,6 +159,7 @@ class Game::Sudoku:ver<1.1.0>:auth<simon.proctor@gmail.com> {
         return self if $!initial{"$x,$y"};
         @!grid[$y][$x] = $val;
         %!poss-cache = ();
+        %!test-cache = ();
         return self;
     }
 
