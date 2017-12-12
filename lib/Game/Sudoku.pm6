@@ -123,16 +123,15 @@ class Game::Sudoku:ver<1.1.1>:auth<simon.proctor@gmail.com> {
 
     method possible( Idx $x, Idx $y, Bool :$set = False ) {
         return $set ?? set() !! () if @!grid[$y][$x] > 0;
-        if %!poss-cache{"$x,$y"}:exists {
-            return $set ?? %!poss-cache{"$x,$y"} !! %!poss-cache{"$x,$y"}.keys.sort;
+        if ! ( %!poss-cache{"$x,$y"}:exists ) {
+            %!poss-cache{"$x,$y"} = ( (1..9) (-) set(
+                                          ( self.row($y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
+                                          ( self.col($x).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
+                                          ( self.square($x,$y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) )
+                                      ) );
         }
 
-        %!poss-cache{"$x,$y"} = ( (1..9) (-) set(
-                                      ( self.row($y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
-                                      ( self.col($x).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) ),
-                                      ( self.square($x,$y).map( -> ( $x, $y ) { @!grid[$y][$x] } ).grep( * > 0 ) )
-                                  ) );
-        return $set ?? %!poss-cache{"$x,$y"} !! %!poss-cache{"$x,$y"}.keys.sort;
+        $set ?? %!poss-cache{"$x,$y"} !! %!poss-cache{"$x,$y"}.keys.sort;
     }
 
     multi method cell( Idx $x, Idx $y ) {
