@@ -9,7 +9,6 @@ class Game::Sudoku:ver<1.1.1>:auth<simon.proctor@gmail.com> {
     has Array @!grid;
     has Set $!initial;
     has Junction $!valid-all;
-    has Junction $!complete-all;
     has Junction $!none-all;
     has %!poss-cache = ();
     has %!test-cache = ();
@@ -44,20 +43,6 @@ class Game::Sudoku:ver<1.1.1>:auth<simon.proctor@gmail.com> {
 
     method !compute-none {
         none( (^9 X ^9).map( -> ($x,$y) { @!grid[$y][$x] } ) );
-    }
-
-    method !compute-complete {
-        all(
-            (^9).map(
-                {
-                    |(
-                        one( self.row( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                        one( self.col( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) ),
-                        one( self.square( $_ ).map( -> ( $x, $y ) { @!grid[$y][$x] } ) )
-                    )
-                }
-            )
-        );
     }
 
     method !compute-valid {
@@ -106,9 +91,8 @@ class Game::Sudoku:ver<1.1.1>:auth<simon.proctor@gmail.com> {
     }
 
     method complete {
-        $!complete-all := self!compute-complete() unless $!complete-all;
         return %!test-cache<complete> if %!test-cache<complete>:exists;
-        %!test-cache<complete> = [&&] (1..9).map( so $!complete-all == *  );
+        %!test-cache<complete> = self.full && self.valid;
     }
 
     method full {
