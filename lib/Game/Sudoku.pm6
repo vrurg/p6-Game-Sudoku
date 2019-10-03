@@ -85,7 +85,7 @@ class Game::Sudoku:ver<1.1.2>:auth<simon.proctor@gmail.com> {
     }
 
     method valid {
-        $!valid-all := self!compute-valid() unless $!valid-all;
+        $!valid-all := self!compute-valid();
         return %!test-cache<valid> if %!test-cache<valid>:exists;
         %!test-cache<valid> = [&&] (1..9).map( so $!valid-all == * );
     }
